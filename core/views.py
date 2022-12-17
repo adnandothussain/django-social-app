@@ -1,4 +1,4 @@
-from django.contrib import messages
+from django.contrib import messages, auth
 from django.contrib.auth.models import User
 from django.shortcuts import render, redirect
 from .models import Profile
@@ -45,5 +45,16 @@ def signup(request):
     return redirect('login')
 
 
-def login(request):
-    return render(request, 'signin.html')
+def signin(request):
+    if request.method != "POST":
+        return render(request, 'signin.html')
+
+    username = request.POST["username"]
+    password = request.POST["password"]
+    user = auth.authenticate(username=username, password=password)
+
+    if user == None:
+        messages.info(request, 'Invalid credentials!')
+        return redirect('signin')
+
+    return redirect('home')
