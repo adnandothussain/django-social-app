@@ -1,12 +1,12 @@
-from django.contrib import messages, auth
-from django.contrib.auth.models import User
+from django.contrib import messages
+from django.contrib.auth.models import User, auth
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from .models import Profile
 # Create your views here.
 
 
-@login_required(login_url="signin")
+@login_required(login_url='signin')
 def index(request):
     return render(request, 'index.html')
 
@@ -58,10 +58,32 @@ def signin(request):
     if user == None:
         messages.info(request, 'Invalid credentials!')
         return redirect('signin')
-
-    return redirect('home')
+    auth.login(request, user)
+    return redirect('/')
 
 
 def logout(request):
     auth.logout(request)
     return redirect('signin')
+
+
+@login_required(login_url="signin")
+def settings(request):
+    user_profile = Profile.objects.get(user=request.user)
+    if request.method != "POST":
+        return render(request, 'setting.html', {'user_profile': user_profile})
+
+    bio = request.POST["bio"]
+    location = request.POST["location"]
+
+    if request.FILES.get('image') == None:
+        image = user_profile.profileImg
+
+    if request.FILES.get('image') != None:
+        image = request.FILES.get('image')
+
+    user_profile.bio = bio
+    user_profile.location = location
+    user_profile.profileImg = image
+    user_profile.save()
+    return redirect('settings')
